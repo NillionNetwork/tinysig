@@ -1,0 +1,9 @@
+gmpy2==2.1.5
+llvmlite==0.41.1
+mpmath==1.3.0
+numba==0.58.1
+numpy==1.25.2
+phe==1.5.0
+pycryptodome==3.19.0
+sympy==1.12
+typing_extensions==4.8.0

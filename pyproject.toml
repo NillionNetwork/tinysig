@@ -1,0 +1,61 @@
+[project]
+name = "tecdsa"
+version = "0.1.0"
+description = """\
+    Pure-Python implementation of a threshold ecdsa signature scheme \
+    based on a secure multi-party computation (MPC) protocol for evaluating \
+    arithmetic sum-of-products expressions via a non-interactive computation phase. \
+    """
+license = {text = "MIT"}
+authors = [
+    {name = "Nillion"},
+    {email = "engineering@nillion.com"}
+]
+readme = "README.rst"
+requires-python = ">=3.10"
+dependencies = [
+    "gmpy2~=2.1.5",
+    "llvmlite~=0.41.1",
+    "mpmath~=1.3.0",
+    "numba~=0.58.1",
+    "numpy~=1.25.2",
+    "phe~=1.5.0",
+    "pycryptodome~=3.19.0",
+    "sympy~=1.12",
+    "typing_extensions~=4.8.0"
+]
+
+[project.urls]
+Repository = "https://github.com/nillion-oss/tecdsa"
+Documentation = "https://tecdsa.readthedocs.io"
+
+[project.optional-dependencies]
+docs = [
+    "toml~=0.10.2",
+    "sphinx~=4.2.0",
+    "sphinx-rtd-theme~=1.0.0",
+    "sphinx-autodoc-typehints~=1.12.0"
+]
+test = [
+    "pytest~=7.2",
+    "pytest-cov~=4.0"
+]
+lint = [
+    "pylint~=2.17.0"
+]
+coveralls = [
+    "coveralls~=3.3.1"
+]
+publish = [
+    "build~=0.10",
+    "twine~=4.0"
+]
+
+[build-system]
+requires = [
+    "setuptools>=68.0"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --ignore=docs --cov=tecdsa --cov-report term-missing"
