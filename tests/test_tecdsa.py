@@ -2,9 +2,9 @@ from phe import paillier
 from random import seed
 import time
 
-from tecdsa.utils import add, verify_ecdsa_signature
-from tecdsa.setup import DSASetup, ECDSASetup
-from tecdsa.tecdsa import ThresholdSignature
+from tinysig.utils import add, verify_ecdsa_signature
+from tinysig.setup import DSASetup, ECDSASetup
+from tinysig.tecdsa import ThresholdSignature
 
 
 import unittest

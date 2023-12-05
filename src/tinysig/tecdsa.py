@@ -432,38 +432,78 @@ class ThresholdSignature(Network):
             sh_inv_label = label+"_inv_lambda_sh_exp"
             node.set_share(inv_share, sh_inv_label)
 
-    def encrypt_and_add_to_sk_local(
-            self,
-            label: str,
-            save_label: str,
-            client_id: int,
-            delete=True
+    def step_4_encrypt_elements(
+            self, 
+            label_lambda_1: str, 
+            label_lambda_2: str, 
+            labdel_lambda_k_inv: str, 
+            save_label_m: str,
+            save_label_gap: str,
+            save_label_lambda_1: str,
+            save_label_lambda_2: str,
+            client_id: int
         ) -> None:
         """
-        Encrypt share and add ecrypted value to the encrypted share secret key blinding exponent.
+        Step 4 of the Threshold Signing protocol.
 
         Parameters:
-            label (str): The label of the share to be encrypted.
-            save_label (str): The label used to save the result of the encrypted addition.
-            client_id (int): The unique identifier for the client.
+            label (str): The label of the masked factor to be inverted.
+            label_lambda_1 (str): The label of lambda 1.
+            label_lambda_2 (str): The label of lambda 2.
+            labdel_lambda_k_inv (str): The label of :math:`k^{-1}`.
+            save_label_m (str): The label to save encrypted m.
+            save_label_gap (str): The label to save :math:`\lambda_{\text{gap}}`.
+            save_label_lambda_1 (str): The label to save lambda 1.
+            save_label_lambda_2 (str): The label to save lambda 2.
+            client_id: int
+
+        Returns:
+            None
+        """
+    
+        q_minus_one = self.q - 1
+        for node in self.nodes:
+            # DB management
+            sh_lambda_1_exp = node.get_share(label_lambda_1 +"_sh_exp")
+            sh_lambda_2_exp = node.get_share(label_lambda_2 +"_sh_exp")
+            sh_lambda_k_inv = node.get_share(labdel_lambda_k_inv +"_sh_exp")
+            sh_lambda_1_base = node.get_share(label_lambda_1 +"_sh_base")
+            sh_lambda_2_base = node.get_share(label_lambda_2 +"_sh_base")
+            enc_lambda_sk = node.get_share(str(client_id)+"th_client_x_enc_sh_exp")
+            # Local operation
+            ## 4(a)
+            sh_m = (sh_lambda_1_exp - sh_lambda_k_inv) % q_minus_one
+            enc_sh_m = node.he_public_keys[client_id - 1].encrypt(sh_m)
+            ## 4(b)
+            sh_int_gap = (sh_lambda_k_inv - sh_lambda_2_exp) % q_minus_one
+            enc_sh_int_gap = node.he_public_keys[client_id - 1].encrypt(sh_int_gap)
+            enc_sh_gap = enc_sh_int_gap + enc_lambda_sk
+            ## 4(c)
+            enc_sh_lambda_1_base = node.he_public_keys[client_id - 1].encrypt(sh_lambda_1_base)
+            enc_sh_lambda_2_base= node.he_public_keys[client_id - 1].encrypt(sh_lambda_2_base)
+            # DB management
+            node.set_share(enc_sh_m, save_label_m+"_sh_exp")
+            node.set_share(enc_sh_gap, save_label_gap+"_sh_exp")
+            node.set_share(enc_sh_lambda_1_base, save_label_lambda_1+"_sh_base")
+            node.set_share(enc_sh_lambda_2_base, save_label_lambda_2+"_sh_base")
+
+
+    def delete_shares(self, list: List) -> None:
+        """
+        Delete a set of shares.
+
+        Parameters:
+            list (List): List of shares to delete.
 
         Returns:
             None
         """
 
         for node in self.nodes:
-            # DB management
-            clear_share = node.get_share(label+"_sh_exp")
-            enc_lambda_sk = node.get_share(str(client_id)+"th_client_x_enc_sh_exp")
-            # Local operation
-            ## Encrypt value from label
-            encrypted_share_value = node.he_public_keys[client_id - 1].encrypt(clear_share)
-            ## Add encrypted values
-            enc_gap_value = encrypted_share_value + enc_lambda_sk
-            # DB management
-            enc_gap_label = str(client_id)+"th_client_"+save_label+"_enc_sh_exp"
-            node.set_share(enc_gap_value, enc_gap_label)
-            node.delete_share(label+"_sh_exp") if delete else None
+            for element in list:
+                node.delete_share(element)
+    
+
 
     def decrypt_and_reconstruct_local(
             self, 
@@ -491,7 +531,7 @@ class ThresholdSignature(Network):
         dec_sh_per_node = [client.he_private_key.decrypt(enc_sh) for enc_sh in enc_sh_per_node]
         q_minus_one = self.q - 1
         ## Reconstruct and take the symmetric value
-        dec_val = -add(dec_sh_per_node, q_minus_one) % q_minus_one
+        dec_val = add(dec_sh_per_node, q_minus_one)
         # DB management
         dec_label = save_label + "_exp"
         client.set_share(dec_val, dec_label)
@@ -526,7 +566,7 @@ class ThresholdSignature(Network):
         except KeyError:
             print(f"Public key triple (<x>, y, Enc([\lambda_x])) from DKG is not complete for client {client_id}. Generate it first using 'distributed_key_generation_protocol({client_id})'")
         
-        # Client independent preprocessing
+        # Signers preprocessing
         # Step 1
         label_k = str(client_id)+"th_client_k"    
         label_lambda_1 = str(client_id)+"th_client_lambda_1"   
@@ -534,32 +574,47 @@ class ThresholdSignature(Network):
         self.get_lambda([label_k, label_lambda_1, label_lambda_2])
         # Step 2
         self.key_agreement_protocol(label_k)
-        # Step 3
+        # Step 3(a): set r
         self.compute_r_local(label_k, client)
-        # Step 4: invert k
+        # Step 3(b): invert k
         self.invert_masked_factor_local(label_k)
-        # Step 5: compute m share
-        self.subtract_exp_shares_local(label_lambda_1 + "_lambda", label_k + "_inv_lambda", str(client_id)+"th_client_m_lambda_exp")
+        # Step 4: encrypt 
+        self.step_4_encrypt_elements(
+            label_lambda_1 + "_lambda", 
+            label_lambda_2 + "_lambda", 
+            label_k + "_inv_lambda", 
+            str(client_id)+"th_client_m_lambda_enc",
+            str(client_id)+"th_client_gap_lambda_enc",
+            str(client_id)+"th_client_lambda_1_enc" ,
+            str(client_id)+"th_client_lambda_2_enc" ,
+            client_id)
+        # Step 5: delete
+        self.delete_shares([
+            str(client_id)+"th_client_k_lambda_sh_exp",
+            str(client_id)+"th_client_k_lambda_sh_base",
+            str(client_id)+"th_client_lambda_1_lambda_sh_exp",
+            str(client_id)+"th_client_lambda_1_lambda_sh_base",
+            str(client_id)+"th_client_lambda_2_lambda_sh_exp",
+            str(client_id)+"th_client_lambda_2_lambda_sh_base",
+            str(client_id)+"th_client_k_inv_lambda_sh_exp",
+        ])
 
-        # Client dependent preprocessing
-        # Step 6: reveal to client
-        get_label = str(client_id)+"th_client_m_lambda_exp"
-        save_label_m = "m_lambda_exp"
-        type_share = "exp"
-        self.reveal(type_share, get_label, save_label_m, client)
-        # Step 7: encrypt and share to client
-        ## Compute difference lambda_inv_k - lambda_2
-        self.subtract_exp_shares_local(label_k + "_inv_lambda", label_lambda_2 + "_lambda", str(client_id)+"th_client_k_inv_minus_lambda_2")
-        ## Encrypt the difference and add to the encrypted secret key lambda
+        # Client preprocessing
+
+        # Step 6: send encryption
         label_gap = "gap_lambda"
-        delete = not self.debug
-        self.encrypt_and_add_to_sk_local(str(client_id)+"th_client_k_inv_minus_lambda_2", label_gap, client_id, delete=delete)
-        ## Send it to the client
-        label_send_gap = str(client_id)+"th_client_"+label_gap+"_enc"
+        label_send_gap = str(client_id)+"th_client_"+ label_gap +"_enc"
+        label_m = "m_lambda"
+        label_send_m = str(client_id)+"th_client_"+ label_m +"_enc"
         type_share = "exp"
         self.send(type_share, label_send_gap, client, delete=True)
-        # Step 8: client decrypts and reconstructs
+        self.send(type_share, label_send_m, client, delete=True)
+        # Step 7: client decrypts and reconstructs
         self.decrypt_and_reconstruct_local(label_send_gap, label_gap, client)
+        self.decrypt_and_reconstruct_local(label_send_m, label_m, client)
+
+
+
 
     def broadcast_masked_message_digest(self, message: str, client: Client) -> None:
         """
@@ -581,8 +636,8 @@ class ThresholdSignature(Network):
         message_digest = SHA256.new(data=message.encode("utf-8"))
         m = int(message_digest.hexdigest(), 16) % self.q
         ## Compute gap particle
-        particle = m * pow(self.h, -m_lambda_exp, self.q) % self.q
-        gap_particle = particle * pow(self.h, gap_lambda_exp, self.q) % self.q
+        minus_m_plus_gap = (-(m_lambda_exp + gap_lambda_exp)) % (self.q - 1)
+        gap_particle = (m * pow(self.h, minus_m_plus_gap, self.q)) % self.q
         # Broadcast
         self.broadcast(gap_particle, str(client.id)+"th_client_gap_particle_m")
 
@@ -601,29 +656,19 @@ class ThresholdSignature(Network):
         
         for node in self.nodes:
             # DB management
-            sh_lambda_1 = node.get_share(str(client_id)+"th_client_lambda_1_lambda_sh_base")
-            sh_lambda_2 = node.get_share(str(client_id)+"th_client_lambda_2_lambda_sh_base")
+            enc_sh_lambda_1 = node.get_share(str(client_id)+"th_client_lambda_1_enc_sh_base")
+            enc_sh_lambda_2 = node.get_share(str(client_id)+"th_client_lambda_2_enc_sh_base")
             p_k_inv = node.get_open(str(client_id)+"th_client_k_inv_sk")
             p_x = node.get_open(str(client_id)+"th_client_x_sk")
             p_r = node.get_open(str(client_id)+"th_client_k_r")
             p_gap_m = node.get_open(str(client_id)+"th_client_gap_particle_m")
             # Local operation
-            s_h_gap_left = (sh_lambda_1 * p_k_inv) % q
-            s_h_gap_left = (s_h_gap_left * p_gap_m) % q
-            s_h_gap_right = (sh_lambda_2 * p_k_inv) % q
-            s_h_gap_right = (s_h_gap_right * p_r) % q
-            s_h_gap_right = (s_h_gap_right * p_x) % q
-            s_h_gap = (s_h_gap_left + s_h_gap_right) % q
+            scalar_k_m = (p_k_inv * p_gap_m) % q
+            scalar_k_r_x = (((p_k_inv * p_r) % q) * p_x) % q
+            enc_sh_s_gap = enc_sh_lambda_1 * scalar_k_m + enc_sh_lambda_2 * scalar_k_r_x
             # DB management
-            node.set_share(s_h_gap, str(client_id)+"th_client_signature_sh_base")
+            node.set_share(enc_sh_s_gap, str(client_id)+"th_client_enc_signature_sh_base")
             if delete:
-                node.delete_share(str(client_id)+"th_client_lambda_1_lambda_sh_base")
-                node.delete_share(str(client_id)+"th_client_lambda_1_lambda_sh_exp")
-                node.delete_share(str(client_id)+"th_client_lambda_2_lambda_sh_base")
-                node.delete_share(str(client_id)+"th_client_lambda_2_lambda_sh_exp")
-                node.delete_share(str(client_id)+"th_client_k_lambda_sh_exp")
-                node.delete_share(str(client_id)+"th_client_k_lambda_sh_base")
-                node.delete_share(str(client_id)+"th_client_k_inv_lambda_sh_exp")
                 node.delete_open(str(client_id)+"th_client_k_sk")
 
     def reconstruct_and_verify_sig(self, message: str, get_label: str, client: Client, delete=True):
@@ -652,7 +697,50 @@ class ThresholdSignature(Network):
         r = client.get_open(str(client.id)+"th_client_k_r")
         s_h_gap = client.get_share(get_label)
         # Compute signature
-        s = (s_h_gap * pow(self.h, -gap_lambda_exp, self.q)) % self.q
+        s = (s_h_gap * pow(self.h, gap_lambda_exp, self.q)) % self.q
+        # Verify signature
+        verify_dsa_signature(message, r, s, y, p, q, g) if self.setup == DSASetup else verify_ecdsa_signature(message, r, s, y, q, G)
+        # DB management
+        signature_label = str(client.id)+"th_client_s"
+        client.set_open(s, signature_label)
+        message_label = str(client.id)+"th_client_message"
+        client.set_open(message, message_label)
+
+    def decrypt_reconstruct_unmask_verify_sig_local(self, message: str, get_label: str, client: Client, delete=True):
+        """
+        Reconstructs and verifies a client's digital signature for a given message.
+
+        Parameters:
+            message (str): The input message for which the signature is to be reconstructed and verified.
+            get_label (str): The label of the shares to be dencrypted and reconstructed.
+            client (Client): An instance of the client for which the signature is reconstructed and verified.
+            delete (bool, optional): A flag indicating whether to delete intermediate shares after verification (default is True).
+
+        Returns:
+            None: This function doesn't return a value; it verifies the signature and potentially deletes intermediate shares.
+        """
+        q = self.q
+        if self.setup == DSASetup:
+            p = self.dsa.p
+            g = self.dsa.g
+        else: 
+            G = self.ecdsa.G
+
+
+        # DB management
+        enc_sh_per_node = [client.get_share(str(client.id)+"th_client_"+get_label+"_sh_base_node_"+str(node.id)) for node in self.nodes]
+        gap_lambda_exp = client.get_share("gap_lambda_exp")
+        y = client.get_open(str(client.id)+"th_client_x_pk")
+        r = client.get_open(str(client.id)+"th_client_k_r")
+
+        # Local operation
+        ## Decrypt
+        dec_sh_per_node = [client.he_private_key.decrypt(enc_sh) for enc_sh in enc_sh_per_node]
+        q_minus_one = self.q - 1
+        ## Reconstruct
+        s_h_gap = add(dec_sh_per_node, q)
+        ## Unmask
+        s = (s_h_gap * pow(self.h, gap_lambda_exp, q)) % q
         # Verify signature
         verify_dsa_signature(message, r, s, y, p, q, g) if self.setup == DSASetup else verify_ecdsa_signature(message, r, s, y, q, G)
         # DB management
@@ -690,22 +778,20 @@ class ThresholdSignature(Network):
             print(f"The preprocessing phase was not run for client {client_id}.")
         
 
-        # Step 11: compute digest, mask it, include gap and broadcast the result to all nodes
+        # Step 8: compute digest, mask it, include gap and broadcast the result to all nodes
         self.broadcast_masked_message_digest(message, client)
-
-        # Step 12a: all nodes compute locally the shares corresponding to clients 
+ 
+        # Step 9a: all nodes compute locally the shares corresponding to clients 
         delete = not self.debug
         self.sign_local(client_id, delete=delete)
 
-        # Step 12b: reveal to client
-        get_label = str(client_id)+"th_client_signature"
-        save_label_m = "sig_gap"
+        # Step 9b: send encryption
+        label_enc_sig = "enc_signature"
+        label_send_enc_sig = str(client_id)+"th_client_" + label_enc_sig
         type_share = "base"
-        self.reveal(type_share, get_label, save_label_m, client)
-        
-        # Step 13 verify
-        get_label = "sig_gap"
-        self.reconstruct_and_verify_sig(message, get_label, client)
+        self.send(type_share, label_send_enc_sig, client, delete=True)
+        # Step 10: client decrypts, reconstructs, unmasks and verifies signature
+        self.decrypt_reconstruct_unmask_verify_sig_local(message, label_enc_sig, client)
 
     def print_signature(self, client_id: int) -> None:
 

@@ -2,4 +2,4 @@
    :maxdepth: 4
    :caption: Contents:
 
-   _source/tecdsa
+   _source/tinysig

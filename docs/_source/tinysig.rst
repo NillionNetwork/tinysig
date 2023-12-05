@@ -1,26 +1,26 @@
-tecdsa module
-=============
+tinysig module
+==============
 
 
-.. automodule:: tecdsa.network
+.. automodule:: tinysig.network
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-.. automodule:: tecdsa.setup
+.. automodule:: tinysig.setup
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-.. automodule:: tecdsa.tecdsa
+.. automodule:: tinysig.tecdsa
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-.. automodule:: tecdsa.utils
+.. automodule:: tinysig.utils
    :members:
    :undoc-members:
    :show-inheritance:

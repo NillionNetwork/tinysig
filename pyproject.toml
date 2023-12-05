@@ -1,5 +1,5 @@
 [project]
-name = "tecdsa"
+name = "tinysig"
 version = "0.1.0"
 description = """\
     Pure-Python implementation of a threshold ecdsa signature scheme \
@@ -26,8 +26,8 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/nillion-oss/tecdsa"
-Documentation = "https://tecdsa.readthedocs.io"
+Repository = "https://github.com/nillion-oss/tinysig"
+Documentation = "https://tinysig.readthedocs.io"
 
 [project.optional-dependencies]
 docs = [
@@ -58,4 +58,4 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules --ignore=docs --cov=tecdsa --cov-report term-missing"
+addopts = "--doctest-modules --ignore=docs --cov=tinysig --cov-report term-missing"

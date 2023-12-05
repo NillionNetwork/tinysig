@@ -1,42 +1,38 @@
 =======
-tecdsa
+tinysig
 =======
 
-Pure-Python implementation of a `threshold ecdsa signature scheme <https://nillion.pub/sum-of-products-lsss-non-interactive.pdf>`__ based on a secure multi-party computation (MPC) `protocol for evaluating arithmetic sum-of-products expressions <https://nillion.pub/sum-of-products-lsss-non-interactive.pdf>`__ via a non-interactive computation phase.
+Pure-Python implementation of a `threshold ecdsa signature scheme <https://nillion.pub/threshold-ecdsa-preprocessing-setup.pdf>`__ based on a secure multi-party computation (MPC) `protocol for evaluating arithmetic sum-of-products expressions <https://nillion.pub/sum-of-products-lsss-non-interactive.pdf>`__ via a non-interactive computation phase.
 
-|pypi| |readthedocs| |actions| |coveralls|
+|pypi| |readthedocs| |actions|
 
-.. |pypi| image:: https://badge.fury.io/py/tecdsa.svg
-   :target: https://badge.fury.io/py/tecdsa
+.. |pypi| image:: https://badge.fury.io/py/tinysig.svg
+   :target: https://badge.fury.io/py/tinysig
    :alt: PyPI version and link.
 
-.. |readthedocs| image:: https://readthedocs.org/projects/tecdsa/badge/?version=latest
-   :target: https://tecdsa.readthedocs.io/en/latest/?badge=latest
+.. |readthedocs| image:: https://readthedocs.org/projects/tinysig/badge/?version=latest
+   :target: https://tinysig.readthedocs.io/en/latest/?badge=latest
    :alt: Read the Docs documentation status.
 
-.. |actions| image:: https://github.com/nillion-oss/tecdsa/workflows/lint-test-cover-docs/badge.svg
-   :target: https://github.com/nillion-oss/tecdsa/actions/workflows/lint-test-cover-docs.yml
+.. |actions| image:: https://github.com/nillion-oss/tinysig/workflows/lint-test-cover-docs/badge.svg
+   :target: https://github.com/nillion-oss/tinysig/actions/workflows/lint-test-cover-docs.yml
    :alt: GitHub Actions status.
-
-.. |coveralls| image:: https://coveralls.io/repos/github/nillion-oss/tecdsa/badge.svg?branch=main
-   :target: https://coveralls.io/github/nillion-oss/tecdsa?branch=main
-   :alt: Coveralls test coverage summary.
 
 Installation and Usage
 ----------------------
 
-This library is available as a `package on PyPI <https://pypi.org/project/tecdsa>`__:
+This library is available as a `package on PyPI <https://pypi.org/project/tinysig>`__:
 
 .. code-block:: bash
 
-    python -m pip install tecdsa
+    python -m pip install tinysig
 
 The library can be imported in the usual way:
 
 .. code-block:: python
 
-    import tecdsa
-    from tecdsa import *
+    import tinysig
+    from tinysig import *
 
 Basic Example
 ^^^^^^^^^^^^^
@@ -72,7 +68,7 @@ After defining a message we can sign it as follows:
 
 .. code-block:: python
 
-    >>> message = "Let me tell you a great secret about Nillion."
+    >>> message = "Let me tell you a secret about Nillion."
     >>> ecnet.ts_online_protocol(message, client_id)
 
 We run the following to print the signature owned by the client (ID=1):
@@ -115,11 +111,11 @@ Style conventions are enforced using `Pylint <https://pylint.readthedocs.io>`__:
 .. code-block:: bash
 
     python -m pip install .[lint]
-    python -m pylint src/tecdsa
+    python -m pylint src/tinysig
 
 Contributions
 ^^^^^^^^^^^^^
-In order to contribute to the source code, open an issue or submit a pull request on the `GitHub page <https://github.com/nillion-oss/tecdsa>`__ for this library.
+In order to contribute to the source code, open an issue or submit a pull request on the `GitHub page <https://github.com/nillion-oss/tinysig>`__ for this library.
 
 Versioning
 ^^^^^^^^^^
@@ -127,7 +123,7 @@ The version number format for this library and the changes to the library associ
 
 Publishing
 ^^^^^^^^^^
-This library can be published as a `package on PyPI <https://pypi.org/project/tecdsa>`__ by a package maintainer. First, install the dependencies required for packaging and publishing:
+This library can be published as a `package on PyPI <https://pypi.org/project/tinysig>`__ by a package maintainer. First, install the dependencies required for packaging and publishing:
 
 .. code-block:: bash
 
