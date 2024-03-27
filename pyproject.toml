@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/nillion-oss/tinysig"
+Repository = "https://github.com/NillionNetwork/tinysig"
 Documentation = "https://tinysig.readthedocs.io"
 
 [project.optional-dependencies]

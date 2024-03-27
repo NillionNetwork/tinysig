@@ -14,8 +14,8 @@ Pure-Python implementation of a `threshold ecdsa signature scheme <https://nilli
    :target: https://tinysig.readthedocs.io/en/latest/?badge=latest
    :alt: Read the Docs documentation status.
 
-.. |actions| image:: https://github.com/nillion-oss/tinysig/workflows/lint-test-cover-docs/badge.svg
-   :target: https://github.com/nillion-oss/tinysig/actions/workflows/lint-test-cover-docs.yml
+.. |actions| image:: https://github.com/NillionNetwork/tinysig/workflows/lint-test-cover-docs/badge.svg
+   :target: https://github.com/NillionNetwork/tinysig/actions/workflows/lint-test-cover-docs.yml
    :alt: GitHub Actions status.
 
 Installation and Usage
@@ -115,7 +115,7 @@ Style conventions are enforced using `Pylint <https://pylint.readthedocs.io>`__:
 
 Contributions
 ^^^^^^^^^^^^^
-In order to contribute to the source code, open an issue or submit a pull request on the `GitHub page <https://github.com/nillion-oss/tinysig>`__ for this library.
+In order to contribute to the source code, open an issue or submit a pull request on the `GitHub page <https://github.com/NillionNetwork/tinysig>`__ for this library.
 
 Versioning
 ^^^^^^^^^^
